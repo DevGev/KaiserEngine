@@ -1,10 +1,10 @@
 import os
-import external 
 from sys import exit
-from defines import *
 from audioplayer import AudioPlayer
 import threading
 
+import kaiserengine.external 
+from kaiserengine.defines import *
 
 class ColliderController:
     def __init__(self):
@@ -340,6 +340,8 @@ class Sprite:
             print("Invalid circle")
             return 0
         self.own_surface = external.surface((self.sprite_w, self.sprite_h))
+        self.own_surface.fill((255, 0, 255))
+        self.own_surface.set_colorkey((255, 0, 255))
         external.draw_circle(self.own_surface, circle.cir_c, (circle.cir_x+self.sprite_w/2, circle.cir_y+self.sprite_h/2), circle.cir_r)
 
     def rectangle(self, rectangle):
@@ -347,6 +349,8 @@ class Sprite:
             print("Invalid rectangle")
             return 0
         self.own_surface = external.surface((self.sprite_w, self.sprite_h))
+        self.own_surface.fill((255, 0, 255))
+        self.own_surface.set_colorkey((255, 0, 255))
         external.draw.rect(self.own_surface, rectangle.rec_c, (self.sprite_x + rectangle.rec_x, \
                               self.sprite_y + rectangle.rec_y, self.sprite_w + rectangle.rec_w, self.sprite_h + rectangle.rec_h))
 
@@ -388,11 +392,12 @@ class Task:
 class Engine:
     def __init__(self, width, height, title, icon):
         self.screen_icon = None
+        self.background = colors.BLACK
         if icon:
             self.screen_icon = external.image_load(icon)
             self.screen_icon.set_colorkey((255, 0, 255))
-        self.screen_title = title
 
+        self.screen_title = title
         self.screen_width = width
         self.screen_height = height
 
@@ -462,7 +467,7 @@ class Engine:
         return self.render_objects[len(self.render_objects)-1]
 
     def render(self):
-        self.display.fill(colors.BLACK)
+        self.display.fill(self.background)
 
         for index, render_object in enumerate(self.render_objects):
             if isinstance(render_object, Circle):
@@ -495,12 +500,15 @@ class Engine:
             if task.task_n == name:
                 del self.tasks[index]
 
+    def set_background(self, back):
+        self.background = back
+
     def events(self):
         external.event_quit()
 
     def run(self):
         self.display = external.display(self.screen_title, self.screen_width, self.screen_height, self.screen_icon)
-        self.display.fill(colors.BLACK)
+        self.display.fill(self.background)
 
         while self.is_running:
             self.delta_time = self.clock.tick(self.fps)
