@@ -3,7 +3,7 @@ from sys import exit
 from audioplayer import AudioPlayer
 import threading
 
-import kaiserengine.external 
+import kaiserengine.external as external
 from kaiserengine.defines import *
 
 class ColliderController:
@@ -392,6 +392,7 @@ class Task:
 class Engine:
     def __init__(self, width, height, title, icon):
         self.screen_icon = None
+        self.background_image = None
         self.background = colors.BLACK
         if icon:
             self.screen_icon = external.image_load(icon)
@@ -467,7 +468,10 @@ class Engine:
         return self.render_objects[len(self.render_objects)-1]
 
     def render(self):
-        self.display.fill(self.background)
+        if self.background_image:
+            self.display.blit(self.background_image, (0, 0))
+        else:
+            self.display.fill(self.background)
 
         for index, render_object in enumerate(self.render_objects):
             if isinstance(render_object, Circle):
@@ -501,14 +505,16 @@ class Engine:
                 del self.tasks[index]
 
     def set_background(self, back):
-        self.background = back
+        if isinstance(back, tuple):
+            self.background = back
+        else:
+            self.background_image = pygame.image.load(back)
 
     def events(self):
         external.event_quit()
 
     def run(self):
         self.display = external.display(self.screen_title, self.screen_width, self.screen_height, self.screen_icon)
-        self.display.fill(self.background)
 
         while self.is_running:
             self.delta_time = self.clock.tick(self.fps)

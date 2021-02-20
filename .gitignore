@@ -1,6 +1,6 @@
 *.pyc
 __pycache__
-kaiser-engine.egg-info
+kaiserengine.egg-info
 dist
 /build
 
