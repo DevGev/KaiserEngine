@@ -7,6 +7,9 @@ pygame.init()
 
 # Resource loading and misc
 
+def transform_rotate(surface, rotation):
+    return pygame.transform.rotate(surface, rotation) 
+
 def image_load(image):
     return pygame.image.load(image)
 
@@ -18,7 +21,6 @@ def get_ticks():
 
 def clock():
     return pygame.time.Clock()
-
 
 def event():
     return pygame.event

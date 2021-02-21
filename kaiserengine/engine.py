@@ -245,6 +245,10 @@ class Bitmap:
             force_path(self.bitmap)
             self.generate_bmp(self.bitmap)
 
+    def rotate(self, rotation):
+        for index, surf in enumerate(self.surfaces):
+            self.surfaces[index] = external.transform_rotate(surf, rotation)
+
     def generate_animation(self, bmp):
         with open(bmp) as F:
             frames = eval(F.read())
@@ -331,6 +335,12 @@ class Sprite:
     def restore_position(self):
         self.sprite_x = self.sprite_ox
         self.sprite_y = self.sprite_oy
+
+    def bitmap_rotate(self, rotation):
+        if self.own_surface:
+            self.own_surface = external.transform_rotate(self.own_surface, rotation)
+        else:
+            self.bitmap.rotate(rotation)
 
     def bitmap_timing(self, time):
         self.bitmap.cooldown = time
