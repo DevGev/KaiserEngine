@@ -5,6 +5,7 @@ from audioplayer import AudioPlayer
 
 import kaiserengine.external as external
 from kaiserengine.defines import *
+from kaiserengine.debug import *
 
 class ColliderController:
     def __init__(self):
@@ -134,7 +135,7 @@ class Projectile:
             horizontal = False 
 
         if horizontal == None:
-            print("Projectile cannot be diagonal")
+            print_error("projectile cannot be diagonal")
              
         if horizontal:
             self.projectile_end_x = int(start_x + end_x)
@@ -170,6 +171,7 @@ class Projectile:
             bmp.bmp_h = self.projectile_h
             bmp.bmp_w = self.projectile_w
             self.bitmap = bmp
+
             return 0
         self.bitmap = Bitmap(bmp, self.projectile_w, self.projectile_h, 0, 0)
 
@@ -191,24 +193,24 @@ class Projectile:
                     self.projectile_cx += self.projectile_h
                     self.projectile_ex += self.projectile_h
                     if self.projectile_cx > self.projectile_end_x:
-                        self.exists = False
+                        self.destroyed = True 
                 else:
                     self.projectile_cx -= self.projectile_h
                     self.projectile_ex -= self.projectile_h
                     if self.projectile_cx < self.projectile_end_x:
-                        self.exists = False
+                        self.destroyed = True 
 
             if not self.projectile_hz:
                 if self.projectile_cy < self.projectile_end_y:
                     self.projectile_cy += self.projectile_h
                     self.projectile_ey += self.projectile_h
                     if self.projectile_cy > self.projectile_end_y:
-                        self.exists = False
+                        self.destroyed = True 
                 else:
                     self.projectile_cy -= self.projectile_h
                     self.projectile_ey -= self.projectile_h
                     if self.projectile_cy < self.projectile_end_y:
-                        self.exists = False
+                        self.destroyed = True 
 
         return (self.projectile_cx, self.projectile_cy)
 
@@ -236,6 +238,14 @@ class Bitmap:
         self.iteration = 0
         self.cooldown = 300
         self.surfaces = []
+
+        if isinstance(bmp, list):
+            for img in bmp:
+                surf = external.surface((width, height))
+                surf.fill(self.bmp_bc)
+                surf.blit(img.grab(), (0, 0))
+                self.surfaces.append(surf)
+            return
 
         if isinstance(bmp, Image):
             surf = external.surface((width, height))
@@ -341,7 +351,7 @@ class Sprite:
 
     def move_x(self, x, direction=True):
         if isinstance(x, float):
-            print("Argument x of Sprite.move_x cannot be float")
+            print_error("argument x of Sprite.move_x cannot be float")
             return -1
 
         for i in range(1, x+1):
@@ -359,7 +369,7 @@ class Sprite:
 
     def move_y(self, y, direction=True):
         if isinstance(y, float):
-            print("Argument y of Sprite.move_y cannot be float")
+            print_error("argument y of Sprite.move_y cannot be float")
             return -1
 
         for i in range(1, y+1):
@@ -414,7 +424,7 @@ class Sprite:
     
     def circle(self, circle):
         if not isinstance(circle, Circle):
-            print("Invalid circle")
+            print_error("invalid circle")
             return 0
         self.own_surface = external.surface((self.sprite_w, self.sprite_h))
         self.own_surface.fill((255, 0, 255))
@@ -422,7 +432,7 @@ class Sprite:
 
     def rectangle(self, rectangle):
         if not isinstance(rectangle, Rectangle):
-            print("Invalid rectangle")
+            print_error("invalid rectangle")
             return 0
         self.own_surface = external.surface((self.sprite_w, self.sprite_h))
         self.own_surface.fill((255, 0, 255))
@@ -492,6 +502,7 @@ class Engine:
 
         self.current_font = None
         self.is_running = True
+        self.debug = False
 
         self.delta_time = 0
         self.fps = 160 
@@ -511,8 +522,13 @@ class Engine:
 
     def find_image(self, name):
         for image in self.loaded_images:
-            if image.img_n == name:
-                return image 
+            if isinstance(image, list):
+                if image[0].img_n == name:
+                    return image
+            else:
+                if image.img_n == name:
+                    return image 
+        print_error("could not preload image: " + name)
 
     def cooldown(self, t, n):
         self.cooldowns.append(Cooldown(t, n))
@@ -520,7 +536,24 @@ class Engine:
 
     def load_image(self, p, n):
         force_path(p)
+
+        if p.split(".")[1] == "ivan":
+            real_path = os.path.realpath(p)
+            dir_path = os.path.dirname(real_path)
+            img_load = []
+
+            with open(p) as F:
+                ivan_file = eval(F.read())
+
+            for img in ivan_file:
+                img_load.append(Image(dir_path + "/" + img, n))
+
+            self.loaded_images.append(img_load)
+            print_info("preloaded ivan file list: " + str(ivan_file) +  " as '" + n + "'")
+            return self.loaded_images[len(self.loaded_images)-1]
+
         self.loaded_images.append(Image(p, n))
+        print_info("preloaded image file: " + p + " as '" + n + "'")
         return self.loaded_images[len(self.loaded_images)-1]
 
     def font(self, f, s):
@@ -532,7 +565,7 @@ class Engine:
 
     def text(self, t, x, y, c):
         if self.current_font == None:
-            print("No font selected")
+            print_error("no font selected")
             return 0
         text = Text(t, x, y, self.current_font, c)
         self.render_objects.append(text)
@@ -619,6 +652,7 @@ class Engine:
         if isinstance(back, tuple):
             self.background = back
         else:
+            force_path(back)
             self.background_image = external.image_load(back)
 
     def events(self):
@@ -626,6 +660,8 @@ class Engine:
 
     def run(self):
         while self.is_running:
+            if self.debug == True:
+                objects_in_render(self.render_objects, Sprite, Projectile, Particles)
             self.delta_time = self.clock.tick(self.fps)
 
             for task in self.tasks:

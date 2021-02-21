@@ -16,8 +16,3 @@ class keys:
     KEY_S = pygame.K_s
     KEY_D = pygame.K_d 
     KEY_SPACE = pygame.K_SPACE
-
-def force_path(p):
-    if not os.path.exists(p):
-        print("Path:", p, "does not exist")
-        sys.exit()
