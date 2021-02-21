@@ -55,6 +55,11 @@ class ColliderController:
         return self.check_collision(current_sprite.sprite_x, current_sprite.sprite_y, current_sprite.sprite_w, \
                                     current_sprite.sprite_h, current_sprite.sprite_n, target)
 
+    def remove(self, sprite_name):
+        for sprite in self.sprites:
+            if sprite.sprite_n == sprite_name:
+                self.sprites.remove(sprite)
+
 class AudioController:
     def set(self, song):
         self.audioplayer = AudioPlayer(song)
@@ -327,6 +332,7 @@ class Sprite:
         self.bitmap = Bitmap(bmp, width, height, 0, 0)
         self.rotation = 0
         self.own_surface = None
+        self.destroyed = False
         self.hidden = False
         self.ghost = False
 
@@ -424,6 +430,10 @@ class Sprite:
         if self.own_surface != None:
             return self.own_surface
         return self.bitmap.grab_surface()
+
+    def destroy(self):
+        self.destroyed = True
+        self.collider_manager.remove(self.sprite_n)
 
 class Text:
     def __init__(self, t, x, y, f, c):
@@ -584,6 +594,9 @@ class Engine:
                     del self.render_objects[index]
 
             if isinstance(render_object, Sprite):
+                if render_object.destroyed == True:
+                    self.render_objects.remove(render_object)
+
                 if render_object.hidden != True:
                     self.display.blit(render_object.grab_surface(), (render_object.sprite_x, render_object.sprite_y))
 
