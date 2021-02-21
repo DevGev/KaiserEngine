@@ -8,10 +8,18 @@ pygame.init()
 
 # Resource loading and misc
 
-def transform_rotate(surface, rotation):
-    return pygame.transform.rotate(surface, rotation) 
+def transform_rotate(surface, angle):
+    orig_rect = surface.get_rect()
+    rot_image = pygame.transform.rotate(surface, angle)
+    rot_rect = orig_rect.copy()
+    rot_rect.center = rot_image.get_rect().center
+    rot_image = rot_image.subsurface(rot_rect).copy()
+    return rot_image
 
-def image_load(image):
+
+def image_load(image, convert=True):
+    if convert:
+        return pygame.image.load(image).convert_alpha()
     return pygame.image.load(image)
 
 def get_ticks():
@@ -47,9 +55,10 @@ def draw_circle(surface, color, center, radius):
 def draw_rect(surface, color, rect):
     pygame.draw.rect(surface, color, rect)
 
-def surface(size):
+def surface(size, colorkey=True):
     surf = pygame.Surface(size)
-    surf.set_colorkey(colors.TRANSPARENT)
+    if colorkey:
+        surf.set_colorkey(colors.TRANSPARENT)
     return surf
 
 def init_font(font, size, system_font=True):

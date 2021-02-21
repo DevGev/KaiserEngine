@@ -21,7 +21,6 @@ class ColliderController:
     
     def rectangle_collision(self, rect1, rect2):
         for a, b in [(rect1, rect2), (rect2, rect1)]:
-            # Check if a's corners are inside b
             if ((self.check_collision_point(a.rec_x, a.rec_y, b)) or
                 (self.check_collision_point(a.rec_x, a.rec_y + a.rec_h, b)) or
                 (self.check_collision_point(a.rec_x + a.rec_w, a.rec_y, b)) or
@@ -70,7 +69,7 @@ class AudioController:
         self.audioplayer.pause()
 
     def unpause(self):
-        self.audioplayer.unpause()
+        self.audioplayer.resume()
 
 class InputController:
     def __init__(self, e):
@@ -150,10 +149,12 @@ class Projectile:
 
     def hit(self, target=None):
         if not self.projectile_hz:
-            return self.collision_manager.check_collision(self.projectile_cx-int(self.projectile_w/2), self.projectile_cy, self.projectile_w, self.projectile_h, target=target)
+            return self.collision_manager.check_collision(self.projectile_cx-int(self.projectile_w/2), \
+                   self.projectile_cy, self.projectile_w, self.projectile_h, target=target)
         # Maybe works?
         if self.projectile_hz:
-            return self.collision_manager.check_collision(self.projectile_cx, self.projectile_cy-int(self.projectile_w/2), self.projectile_h, self.projectile_w, target=target)
+            return self.collision_manager.check_collision(self.projectile_cx, self.projectile_cy-int(self.projectile_w/2), \
+                   self.projectile_h, self.projectile_w, target=target)
         return 0
 
     def bitmap_set(self, bmp):
@@ -221,8 +222,9 @@ class Bitmap:
         self.bmp_bc = bc
         
         self.last = external.get_ticks()
-        self.iteration = 0 
-        self.cooldown = 300  
+        self.rotation = 0
+        self.iteration = 0
+        self.cooldown = 300
         self.surfaces = []
 
         if isinstance(bmp, Image):
@@ -246,6 +248,7 @@ class Bitmap:
             self.generate_bmp(self.bitmap)
 
     def rotate(self, rotation):
+        self.rotation = rotation
         for index, surf in enumerate(self.surfaces):
             self.surfaces[index] = external.transform_rotate(surf, rotation)
 
@@ -426,7 +429,7 @@ class Engine:
         self.background_image = None
         self.background = colors.BLACK
         if icon:
-            self.screen_icon = external.image_load(icon)
+            self.screen_icon = external.image_load(icon, False)
 
         self.screen_title = title
         self.screen_width = width
@@ -447,6 +450,8 @@ class Engine:
 
         self.delta_time = 0
         self.fps = 160 
+        self.display = external.display(self.screen_title, self.screen_width, \
+                                        self.screen_height, self.screen_icon)
 
     def find_cooldown(self, name):
         for cooldown in self.cooldowns:
@@ -558,8 +563,6 @@ class Engine:
         external.event_quit()
 
     def run(self):
-        self.display = external.display(self.screen_title, self.screen_width, self.screen_height, self.screen_icon)
-
         while self.is_running:
             self.delta_time = self.clock.tick(self.fps)
 
