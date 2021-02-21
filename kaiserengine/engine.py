@@ -355,22 +355,16 @@ class Sprite:
 
     def collided(self, target=None):
         collided = 0
-        self.sprite_x += 1
-        if self.collider_manager.check(self.sprite_n, target):
-            collided = 1
         self.sprite_x -= 1
-        self.sprite_y += 1
-        if self.collider_manager.check(self.sprite_n, target):
-            collided = 1
+        self.sprite_w += 1
         self.sprite_y -= 1
-        self.sprite_x -= 1
+        self.sprite_h += 1
         if self.collider_manager.check(self.sprite_n, target):
             collided = 1
         self.sprite_x += 1
-        self.sprite_y -= 1
-        if self.collider_manager.check(self.sprite_n, target):
-            collided = 1
+        self.sprite_w -= 1
         self.sprite_y += 1
+        self.sprite_h -= 1
         return collided
     
     def circle(self, circle):

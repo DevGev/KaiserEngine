@@ -3,7 +3,7 @@ from setuptools import find_packages, setup
 setup(
     name='kaiserengine',
     description='A game engine developed in python.',
-    version='0.1.0',
+    version='0.1.1',
     url='https://github.com/devgev/KaiserEngine',
     author='Kamal Developers',
     author_email='kamaldevelopers@tutanota.com',
