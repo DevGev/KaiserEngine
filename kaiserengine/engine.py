@@ -1,7 +1,7 @@
 import os
 from sys import exit
+import random
 from audioplayer import AudioPlayer
-import threading
 
 import kaiserengine.external as external
 from kaiserengine.defines import *
@@ -148,6 +148,9 @@ class Projectile:
         self.collision_manager = cm
 
     def hit(self, target=None):
+        if self.destroy:
+            return
+
         if not self.projectile_hz:
             return self.collision_manager.check_collision(self.projectile_cx-int(self.projectile_w/2), \
                    self.projectile_cy, self.projectile_w, self.projectile_h, target=target)
@@ -279,6 +282,35 @@ class Bitmap:
 
         surf = self.surfaces[self.iteration]
         return surf
+
+class Particles:
+    def __init__(self, x, y, r, decrease, amount, color):
+        self.par_x = x
+        self.par_y = y
+        self.par_r = r 
+        self.par_a = amount
+        self.par_d = decrease
+        self.par_c = color
+
+        self.particles = []
+        for x in range(0, amount):
+            self.generate()
+
+    def grab(self):
+        circles_draw = []
+        for index, particle in enumerate(self.particles):
+            self.particles[index][0][0] += self.particles[index][1][0]
+            self.particles[index][0][1] += self.particles[index][1][1]
+            self.particles[index][2] -= self.par_d 
+            if not self.particles[index][2] <= 0:
+                circles_draw.append(self.particles[index])
+        return circles_draw
+
+    def generate(self):
+        self.par_vx = random.randint(0, 20) / 10 - 1 
+        self.par_vy = random.randint(0, 20) / 10 - 1 
+        r = self.par_r + random.randint(-2, 2)
+        self.particles.append([[self.par_x, self.par_y], [self.par_vx, self.par_vy], r])
 
 class Sprite:
     def __init__(self, cm, bmp, x, y, width, height, name):
@@ -492,6 +524,11 @@ class Engine:
         self.render_objects.append(text)
         return self.render_objects[len(self.render_objects)-1]
 
+    def particle_effect(self, x, y, r, decrease, amount, color):
+        particle = Particles(x, y, r, decrease, amount, color)
+        self.render_objects.append(particle)
+        return particle
+
     def rectangle(self, x, y, width, height, c, static=False):
         rectangle = Rectangle(x, y, width, height, c)
         if static == True:
@@ -520,6 +557,14 @@ class Engine:
             self.display.fill(self.background)
 
         for index, render_object in enumerate(self.render_objects):
+
+            if isinstance(render_object, Particles):
+                circles = render_object.grab()
+                if len(circles) == 0:
+                    del self.render_objects[index]
+                for circle in circles:
+                    external.draw_circle(self.display, render_object.par_c, (circle[0][0], circle[0][1]), circle[2])
+
             if isinstance(render_object, Circle):
                 external.draw_circle(self.display, render_object.cir_c, (render_object.cir_x, render_object.cir_y), render_object.cir_r)
 
