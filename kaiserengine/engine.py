@@ -121,6 +121,7 @@ class Projectile:
 
         self.projectile_cx = start_x
         self.projectile_cy = start_y
+        self.bitmap = None
 
         horizontal = None
         if end_y == 0:
@@ -154,6 +155,17 @@ class Projectile:
         if self.projectile_hz:
             return self.collision_manager.check_collision(self.projectile_cx, self.projectile_cy-int(self.projectile_w/2), self.projectile_h, self.projectile_w, target=target)
         return 0
+
+    def bitmap_set(self, bmp):
+        if isinstance(bmp, Bitmap):
+            bmp.bmp_h = self.projectile_h
+            bmp.bmp_w = self.projectile_w
+            self.bitmap = bmp
+            return 0
+        self.bitmap = Bitmap(bmp, self.projectile_w, self.projectile_h, 0, 0)
+
+    def grab_surface(self):
+        return self.bitmap.grab_surface()
 
     def iterate(self):
         now = external.get_ticks()
@@ -191,6 +203,15 @@ class Projectile:
 
         return (self.projectile_cx, self.projectile_cy)
 
+class Image:
+    def __init__(self, path, name):
+        self.img_p = path
+        self.img_n = name
+        self.loaded = external.image_load(path)
+
+    def grab(self):
+        return self.loaded
+
 class Bitmap:
     def __init__(self, bmp, width, height,  fc, bc):
         self.bitmap = bmp
@@ -204,17 +225,25 @@ class Bitmap:
         self.cooldown = 300  
         self.surfaces = []
 
+        if isinstance(bmp, Image):
+            surf = external.surface((width, height))
+            surf.fill(self.bmp_bc)
+            surf.blit(bmp.grab(), (0, 0))
+            self.surfaces.append(surf)
+            return
+
         if isinstance(bmp, tuple):
             surf = external.surface((width, height))
             surf.fill(bmp)
             self.surfaces.append(surf)
+            return
+
+        if self.bitmap.split(".")[1] == "ivan":
+            force_path(self.bitmap)
+            self.generate_animation(self.bitmap)
         else:
-            if self.bitmap.split(".")[1] == "ivan":
-                force_path(self.bitmap)
-                self.generate_animation(self.bitmap)
-            else:
-                force_path(self.bitmap)
-                self.generate_bmp(self.bitmap)
+            force_path(self.bitmap)
+            self.generate_bmp(self.bitmap)
 
     def generate_animation(self, bmp):
         with open(bmp) as F:
@@ -407,6 +436,7 @@ class Engine:
         self.collider_manager = ColliderController()
         self.audio_controller = AudioController()
         
+        self.loaded_images = []
         self.cooldowns = []
         self.render_objects = []
         self.tasks = []
@@ -427,9 +457,19 @@ class Engine:
             if sprite.sprite_n == name:
                 return sprite
 
+    def find_image(self, name):
+        for image in self.loaded_images:
+            if image.img_n == name:
+                return image 
+
     def cooldown(self, t, n):
         self.cooldowns.append(Cooldown(t, n))
         return self.cooldowns[len(self.cooldowns)-1]
+
+    def load_image(self, p, n):
+        force_path(p)
+        self.loaded_images.append(Image(p, n))
+        return self.loaded_images[len(self.loaded_images)-1]
 
     def font(self, f, s):
         if ".tff" in f:
@@ -485,7 +525,10 @@ class Engine:
 
             if isinstance(render_object, Projectile):
                 if render_object.exists == True and render_object.destroy == False:
-                    external.draw_line(self.display, render_object.projectile_c, render_object.grab(), (render_object.projectile_ex, render_object.projectile_ey), render_object.projectile_w)
+                    if render_object.bitmap:
+                        self.display.blit(render_object.grab_surface(), render_object.grab())
+                    else:
+                        external.draw_line(self.display, render_object.projectile_c, render_object.grab(), (render_object.projectile_ex, render_object.projectile_ey), render_object.projectile_w)
                 else:
                     del self.render_objects[index]
 
@@ -508,7 +551,7 @@ class Engine:
         if isinstance(back, tuple):
             self.background = back
         else:
-            self.background_image = pygame.image.load(back)
+            self.background_image = external.image_load(back)
 
     def events(self):
         external.event_quit()
