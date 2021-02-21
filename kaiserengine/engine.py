@@ -1,5 +1,6 @@
 import os
 from sys import exit
+import threading
 import random
 from audioplayer import AudioPlayer
 
@@ -62,20 +63,46 @@ class ColliderController:
                 self.sprites.remove(sprite)
 
 class AudioController:
+    def __init__(self):
+        self.audio_volume = 1
+        self.current_song = None
+        self.audioplayer = None
+        self.loop = True
+
+    def sfx(self, effect, volume):
+        audioplayer = AudioPlayer(effect)
+        audioplayer.volume = volume
+        audioplayer.play(block=True) 
+        audioplayer.close()
+
+    def play_sfx(self, effect, volume):
+        sf = threading.Thread(target=self.sfx, args=(effect,volume,))
+        sf.daemon = True
+        sf.start()
+
     def set(self, song):
+        force_path(song)
+        if self.audioplayer:
+            self.close()
+
         self.audioplayer = AudioPlayer(song)
+        self.audioplayer.volume = self.audio_volume
+        self.current_song = song
 
     def play(self):
-        self.audioplayer.play()
+        self.audioplayer.play(loop=self.loop)
 
     def volume(self, v):
-        self.audioplayer.volume = v
+        self.audio_volume = v
 
     def pause(self):
         self.audioplayer.pause()
 
     def unpause(self):
         self.audioplayer.resume()
+    
+    def close(self):
+        self.audioplayer.close()
 
 class InputController:
     def __init__(self, e):
