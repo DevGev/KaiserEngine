@@ -266,7 +266,6 @@ class Bitmap:
         surf = external.surface((width, height))
         surf.fill(self.bmp_bc)
         surf.blit(image, (0, 0))
-        surf.set_colorkey((255, 0, 255))
         self.surfaces.append(surf)
 
     def grab_surface(self):
@@ -380,7 +379,6 @@ class Sprite:
             return 0
         self.own_surface = external.surface((self.sprite_w, self.sprite_h))
         self.own_surface.fill((255, 0, 255))
-        self.own_surface.set_colorkey((255, 0, 255))
         external.draw_circle(self.own_surface, circle.cir_c, (circle.cir_x+self.sprite_w/2, circle.cir_y+self.sprite_h/2), circle.cir_r)
 
     def rectangle(self, rectangle):
@@ -389,7 +387,6 @@ class Sprite:
             return 0
         self.own_surface = external.surface((self.sprite_w, self.sprite_h))
         self.own_surface.fill((255, 0, 255))
-        self.own_surface.set_colorkey((255, 0, 255))
         external.draw.rect(self.own_surface, rectangle.rec_c, (self.sprite_x + rectangle.rec_x, \
                               self.sprite_y + rectangle.rec_y, self.sprite_w + rectangle.rec_w, self.sprite_h + rectangle.rec_h))
 
@@ -435,7 +432,6 @@ class Engine:
         self.background = colors.BLACK
         if icon:
             self.screen_icon = external.image_load(icon)
-            self.screen_icon.set_colorkey((255, 0, 255))
 
         self.screen_title = title
         self.screen_width = width

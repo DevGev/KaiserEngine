@@ -1,6 +1,7 @@
 # Pygame should not be used in the future
 import os
 os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = "hide"
+from kaiserengine.defines import *
 import pygame
 pygame.init()
 
@@ -47,7 +48,9 @@ def draw_rect(surface, color, rect):
     pygame.draw.rect(surface, color, rect)
 
 def surface(size):
-    return pygame.Surface(size)
+    surf = pygame.Surface(size)
+    surf.set_colorkey(colors.TRANSPARENT)
+    return surf
 
 def init_font(font, size, system_font=True):
     pygame.font.init()
