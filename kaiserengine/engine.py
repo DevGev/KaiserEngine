@@ -294,6 +294,7 @@ class Sprite:
         self.bitmap = Bitmap(bmp, width, height, 0, 0)
         self.own_surface = None
         self.hidden = False
+        self.ghost = False
 
     def move_x(self, x, direction=True):
         if isinstance(x, float):
@@ -306,7 +307,7 @@ class Sprite:
                 self.sprite_x += i
             else:
                 self.sprite_x -= i
-            if self.collider_manager.check(self.sprite_n):
+            if self.collider_manager.check(self.sprite_n) and not self.ghost:
                 if direction == True:
                     self.sprite_x -= i
                 else:
@@ -324,7 +325,7 @@ class Sprite:
                 self.sprite_y += i
             else:
                 self.sprite_y -= i
-            if self.collider_manager.check(self.sprite_n):
+            if self.collider_manager.check(self.sprite_n) and not self.ghost:
                 if direction == False:
                     self.sprite_y -= i
                 else:
@@ -356,15 +357,15 @@ class Sprite:
     def collided(self, target=None):
         collided = 0
         self.sprite_x -= 1
-        self.sprite_w += 1
+        self.sprite_w += 2
         self.sprite_y -= 1
-        self.sprite_h += 1
+        self.sprite_h += 2
         if self.collider_manager.check(self.sprite_n, target):
             collided = 1
         self.sprite_x += 1
-        self.sprite_w -= 1
+        self.sprite_w -= 2
         self.sprite_y += 1
-        self.sprite_h -= 1
+        self.sprite_h -= 2
         return collided
     
     def circle(self, circle):
