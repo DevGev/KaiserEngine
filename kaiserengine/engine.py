@@ -147,13 +147,13 @@ class Projectile:
 
         self.projectile_hz = horizontal
         self.exists = True
-        self.destroy = False
+        self.destroyed = False
         self.last = external.get_ticks()
         self.cooldown = time
         self.collision_manager = cm
 
     def hit(self, target=None):
-        if self.destroy:
+        if self.destroyed:
             return
 
         if not self.projectile_hz:
@@ -211,6 +211,9 @@ class Projectile:
                         self.exists = False
 
         return (self.projectile_cx, self.projectile_cy)
+
+    def destroy(self):
+        self.destroyed = True
 
 class Image:
     def __init__(self, path, name):
@@ -501,9 +504,10 @@ class Engine:
                 return cooldown
 
     def find_sprite(self, name):
-        for sprite in self.sprites:
-            if sprite.sprite_n == name:
-                return sprite
+        for sprite in self.render_objects:
+            if isinstance(sprite, Sprite):
+                if sprite.sprite_n == name:
+                    return sprite
 
     def find_image(self, name):
         for image in self.loaded_images:
@@ -585,7 +589,7 @@ class Engine:
                 self.display.blit(render_object.grab_surface(), (render_object.text_x, render_object.text_y))
 
             if isinstance(render_object, Projectile):
-                if render_object.exists == True and render_object.destroy == False:
+                if render_object.exists == True and render_object.destroyed == False:
                     if render_object.bitmap:
                         self.display.blit(render_object.grab_surface(), render_object.grab())
                     else:
