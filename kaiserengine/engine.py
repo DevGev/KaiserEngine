@@ -222,7 +222,6 @@ class Bitmap:
         self.bmp_bc = bc
         
         self.last = external.get_ticks()
-        self.rotation = 0
         self.iteration = 0
         self.cooldown = 300
         self.surfaces = []
@@ -247,10 +246,9 @@ class Bitmap:
             force_path(self.bitmap)
             self.generate_bmp(self.bitmap)
 
-    def rotate(self, rotation):
-        self.rotation = rotation
+    def rotate(self, original_r, r):
         for index, surf in enumerate(self.surfaces):
-            self.surfaces[index] = external.transform_rotate(surf, rotation)
+            self.surfaces[index] = external.transform_rotate_center(surf, r-original_r)
 
     def generate_animation(self, bmp):
         with open(bmp) as F:
@@ -295,6 +293,7 @@ class Sprite:
         self.collider_manager = cm
 
         self.bitmap = Bitmap(bmp, width, height, 0, 0)
+        self.rotation = 0
         self.own_surface = None
         self.hidden = False
         self.ghost = False
@@ -341,9 +340,10 @@ class Sprite:
 
     def bitmap_rotate(self, rotation):
         if self.own_surface:
-            self.own_surface = external.transform_rotate(self.own_surface, rotation)
+            self.own_surface = external.transform_rotate_center(self.own_surface, self.rotation - rotation)
         else:
-            self.bitmap.rotate(rotation)
+            self.bitmap.rotate(self.rotation, rotation)
+        self.rotation = rotation
 
     def bitmap_timing(self, time):
         self.bitmap.cooldown = time

@@ -8,14 +8,16 @@ pygame.init()
 
 # Resource loading and misc
 
-def transform_rotate(surface, angle):
+def transform_rotate_center(surface, angle):
     orig_rect = surface.get_rect()
-    rot_image = pygame.transform.rotate(surface, angle)
+    rot_surface = pygame.transform.rotate(surface, angle)
     rot_rect = orig_rect.copy()
-    rot_rect.center = rot_image.get_rect().center
-    rot_image = rot_image.subsurface(rot_rect).copy()
-    return rot_image
+    rot_rect.center = rot_surface.get_rect().center
+    rot_surface = rot_surface.subsurface(rot_rect).copy()
+    return rot_surface
 
+def transform_rotate(surface, angle):
+    return pygame.transform.rotate(surface, angle)
 
 def image_load(image, convert=True):
     if convert:
