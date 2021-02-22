@@ -9,6 +9,9 @@ from kaiserengine.defines import *
 from kaiserengine.loader import *
 from kaiserengine.debug import *
 
+SCREEN_SIZE_W = 0
+SCREEN_SIZE_H = 0
+
 class ColliderController:
     def __init__(self):
         self.sprites = []
@@ -367,15 +370,19 @@ class Sprite:
 
         self.bitmap = Bitmap(bmp, width, height, 0, 0)
         self.rotation = 0
+
+        self.screen_boundary = False
         self.own_surface = None
         self.destroyed = False
         self.hidden = False
         self.ghost = False
 
     def move_x(self, x, direction=True):
-        if isinstance(x, float):
-            print_error("argument x of Sprite.move_x cannot be float")
-            return -1
+        if self.screen_boundary:
+            if self.sprite_x + x >= SCREEN_SIZE_W - self.sprite_w and direction:
+                return
+            if self.sprite_x - x <= 0 and not direction:
+                return
 
         for i in range(1, x+1):
             i = i/i
@@ -391,9 +398,11 @@ class Sprite:
                 return
 
     def move_y(self, y, direction=True):
-        if isinstance(y, float):
-            print_error("argument y of Sprite.move_y cannot be float")
-            return -1
+        if self.screen_boundary:
+            if self.sprite_y + y >= SCREEN_SIZE_H - self.sprite_h and not direction:
+                return
+            if self.sprite_y - y <= 0 and direction:
+                return
 
         for i in range(1, y+1):
             i = i/i
@@ -705,4 +714,7 @@ class Engine:
             self.render()
 
 def init(width, height, title, icon=None):
+    global SCREEN_SIZE_H, SCREEN_SIZE_W
+    SCREEN_SIZE_H = height
+    SCREEN_SIZE_W = width 
     return Engine(width, height, title, icon)
