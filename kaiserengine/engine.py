@@ -6,6 +6,7 @@ from audioplayer import AudioPlayer
 
 import kaiserengine.external as external
 from kaiserengine.defines import *
+from kaiserengine.loader import *
 from kaiserengine.debug import *
 
 class ColliderController:
@@ -299,14 +300,9 @@ class Bitmap:
             self.surfaces[index] = external.transform_rotate_center(surf, r-original_r)
 
     def generate_animation(self, bmp):
-        with open(bmp) as F:
-            frames = eval(F.read())
-
-        real_path = os.path.realpath(bmp)
-        dir_path = os.path.dirname(real_path)
-
+        frames = load_ivan(bmp)
         for animation in frames:
-            self.generate_bmp(dir_path + "/" + animation)
+            self.generate_bmp(animation)
 
     def generate_bmp(self, bmp):
         width = self.bmp_w
@@ -530,11 +526,23 @@ class Engine:
         self.current_font = None
         self.is_running = True
         self.debug = False
+        self.enable_fullscreen = False
+        self.fullscreen_key = keys.KEY_F
+        self.fullscreen_counter = self.cooldown(1000, "Fullscreen Timer")
 
+        self.display_flags = 0 
         self.delta_time = 0
         self.fps = 160 
         self.display = external.display(self.screen_title, self.screen_width, \
                                         self.screen_height, self.screen_icon)
+
+    def set_display_mode(self, flags):
+        self.display_flags = flags
+        external.set_mode((self.screen_width, self.screen_height), flags)
+
+    def fullscreen(self, key):
+        self.enable_fullscreen = True
+        self.fullscreen_key = key
 
     def find_cooldown(self, name):
         for cooldown in self.cooldowns:
@@ -565,18 +573,11 @@ class Engine:
         force_path(p)
 
         if p.split(".")[1] == "ivan":
-            real_path = os.path.realpath(p)
-            dir_path = os.path.dirname(real_path)
             img_load = []
-
-            with open(p) as F:
-                ivan_file = eval(F.read())
-
-            for img in ivan_file:
-                img_load.append(Image(dir_path + "/" + img, n))
-
+            for img in load_ivan(p):
+                img_load.append(Image(img, n))
             self.loaded_images.append(img_load)
-            print_info("preloaded ivan file list: " + str(ivan_file) +  " as '" + n + "'")
+            print_info("preloaded ivan file: " + str(p) +  " as '" + n + "'")
             return self.loaded_images[len(self.loaded_images)-1]
 
         self.loaded_images.append(Image(p, n))
@@ -664,7 +665,7 @@ class Engine:
                 if render_object.hidden != True:
                     self.display.blit(render_object.grab_surface(), (render_object.sprite_x, render_object.sprite_y))
 
-        external.display_update()
+        external.display_flip()
 
     def task(self, t, n):
         self.tasks.append(Task(t, n))
@@ -684,6 +685,11 @@ class Engine:
 
     def events(self):
         external.event_quit()
+
+        if self.controller.pressed(self.fullscreen_key) and self.enable_fullscreen and self.display.get_flags() & display.FULLSCREEN and self.fullscreen_counter.status():
+            external.set_mode((self.screen_width, self.screen_height), None)
+        elif self.controller.pressed(self.fullscreen_key) and self.enable_fullscreen and not self.display.get_flags() & display.FULLSCREEN and self.fullscreen_counter.status():
+            external.set_mode((self.screen_width, self.screen_height), self.display_flags | display.FULLSCREEN)
 
     def run(self):
         while self.is_running:

@@ -45,7 +45,6 @@ def event_quit():
             pygame.quit()                    
             exit()
 
-
 # Draw functions  
 
 def draw_line(surface, color, start_pos, end_pos, width):
@@ -77,6 +76,15 @@ def display(title, width, height, icon=None):
     if icon:
         pygame.display.set_icon(icon)    
     return pygame.display.set_mode((width, height), 0, 32)
+
+def set_mode(size, flags):
+    if flags:
+        pygame.display.set_mode(size, flags)
+    else: 
+        pygame.display.set_mode(size)
+
+def display_flip():
+    pygame.display.flip()
 
 def display_update():
     pygame.display.update()
