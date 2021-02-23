@@ -54,10 +54,26 @@ class ColliderController:
 
         return 0
 
-    def check(self, sprite_name, target=None):
+    def check(self, sprite_name, target=None, side=None):
         for index, sprite in enumerate(self.sprites):
             if sprite.sprite_n == sprite_name:
                 current_sprite = sprite
+
+        if side == sides.BOTTOM:
+            return self.check_collision(current_sprite.sprite_x+1, current_sprite.sprite_y+1, current_sprite.sprite_w-2, \
+                                        current_sprite.sprite_h-1, current_sprite.sprite_n, target)
+        if side == sides.TOP:
+            return self.check_collision(current_sprite.sprite_x+1, current_sprite.sprite_y, current_sprite.sprite_w-2, \
+                                        current_sprite.sprite_h-1, current_sprite.sprite_n, target)
+
+        if side == sides.LEFT:
+            return self.check_collision(current_sprite.sprite_x, current_sprite.sprite_y+1, current_sprite.sprite_w-1, \
+                                        current_sprite.sprite_h-2, current_sprite.sprite_n, target)
+
+        if side == sides.RIGHT:
+            return self.check_collision(current_sprite.sprite_x+1, current_sprite.sprite_y+1, current_sprite.sprite_w, \
+                                        current_sprite.sprite_h-2, current_sprite.sprite_n, target)
+
         return self.check_collision(current_sprite.sprite_x, current_sprite.sprite_y, current_sprite.sprite_w, \
                                     current_sprite.sprite_h, current_sprite.sprite_n, target)
 
@@ -112,9 +128,9 @@ class InputController:
     def __init__(self, e):
         self.events = e
 
-    def pressed(self, keynum):
+    def pressed(self, key):
         keys = external.keys_pressed()
-        if keys[keynum] or keys[keynum]:
+        if keys[key] or keys[key]:
             return 1
         return 0
 
@@ -205,6 +221,9 @@ class Projectile:
 
             return 0
         self.bitmap = Bitmap(bmp, self.projectile_w, self.projectile_h, 0, 0)
+
+    def bitmap_timing(self, time):
+        self.bitmap.cooldown = time
 
     def grab_surface(self):
         return self.bitmap.grab_surface()
@@ -377,7 +396,12 @@ class Sprite:
         self.hidden = False
         self.ghost = False
 
-    def move_x(self, x, direction=True):
+    def move_x(self, x):
+        direction = True
+        if x < 0:
+            direction = False
+            x = abs(x)
+
         if self.screen_boundary:
             if self.sprite_x + x >= SCREEN_SIZE_W - self.sprite_w and direction:
                 return
@@ -397,7 +421,12 @@ class Sprite:
                     self.sprite_x += i
                 return
 
-    def move_y(self, y, direction=True):
+    def move_y(self, y):
+        direction = True 
+        if y < 0:
+            direction = False
+            y = abs(y)
+
         if self.screen_boundary:
             if self.sprite_y + y >= SCREEN_SIZE_H - self.sprite_h and not direction:
                 return
@@ -440,13 +469,13 @@ class Sprite:
             return self.sprite_x + self.sprite_w/2
         return self.sprite_y - self.sprite_h/2
 
-    def collided(self, target=None):
+    def collided(self, target=None, side=None):
         collided = 0
         self.sprite_x -= 1
         self.sprite_w += 2
         self.sprite_y -= 1
         self.sprite_h += 2
-        if self.collider_manager.check(self.sprite_n, target):
+        if self.collider_manager.check(self.sprite_n, target, side):
             collided = 1
         self.sprite_x += 1
         self.sprite_w -= 2
@@ -613,8 +642,8 @@ class Engine:
         self.render_objects.append(particle)
         return particle
 
-    def rectangle(self, x, y, width, height, c, static=False):
-        rectangle = Rectangle(x, y, width, height, c)
+    def rectangle(self, x, y, w, h, c, static=False):
+        rectangle = Rectangle(x, y, w, h, c)
         if static == True:
             self.render_objects.append(rectangle)
         return rectangle

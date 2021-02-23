@@ -2,6 +2,12 @@ import pygame
 import os
 import sys
 
+class sides:
+    TOP = 0
+    BOTTOM = 1
+    LEFT = 2
+    RIGHT = 3
+
 class display:
     FULLSCREEN = pygame.FULLSCREEN
     DOUBLEBUF = pygame.DOUBLEBUF
