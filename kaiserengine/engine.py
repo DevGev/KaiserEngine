@@ -26,6 +26,9 @@ class ColliderController:
         return False
     
     def rectangle_collision(self, rect1, rect2):
+        # FIXME
+        return external.rectangle_collision(rect1, rect2)
+
         for a, b in [(rect1, rect2), (rect2, rect1)]:
             if ((self.check_collision_point(a.rec_x, a.rec_y, b)) or
                 (self.check_collision_point(a.rec_x, a.rec_y + a.rec_h, b)) or
@@ -43,9 +46,12 @@ class ColliderController:
                     if self.rectangle_collision(rec1, rec2):
                         return sprite.sprite_n
         else:
+            sprite = None
             for index, _sprite in enumerate(self.sprites):
                 if _sprite.sprite_n == target:
                     sprite = _sprite
+            if not sprite:
+                return 0 
 
             rec1 = Rectangle(sx, sy, sw, sh, 0)
             rec2 = Rectangle(sprite.sprite_x, sprite.sprite_y, sprite.sprite_w, sprite.sprite_h, 0)
@@ -475,8 +481,7 @@ class Sprite:
         self.sprite_w += 2
         self.sprite_y -= 1
         self.sprite_h += 2
-        if self.collider_manager.check(self.sprite_n, target, side):
-            collided = 1
+        collided = self.collider_manager.check(self.sprite_n, target, side)
         self.sprite_x += 1
         self.sprite_w -= 2
         self.sprite_y += 1
@@ -682,7 +687,7 @@ class Engine:
                 external.draw_circle(self.display, render_object.cir_c, (render_object.cir_x, render_object.cir_y), render_object.cir_r)
 
             if isinstance(render_object, Rectangle):
-                external.draw.rect(self.display, render_object.rec_c, (render_object.rec_x, render_object.rec_y, render_object.rec_w, render_object.rec_h))
+                external.draw_rect(self.display, render_object.rec_c, (render_object.rec_x, render_object.rec_y, render_object.rec_w, render_object.rec_h))
 
             if isinstance(render_object, Text):
                 self.display.blit(render_object.grab_surface(), (render_object.text_x, render_object.text_y))

@@ -8,6 +8,11 @@ pygame.init()
 
 # Resource loading and misc
 
+def rectangle_collision(rect1, rect2):
+    r1 = pygame.Rect(rect1.rec_x, rect1.rec_y, rect1.rec_w, rect1.rec_h)
+    r2 = pygame.Rect(rect2.rec_x, rect2.rec_y, rect2.rec_w, rect2.rec_h)
+    return r1.colliderect(r2)
+
 def transform_rotate_center(surface, angle):
     orig_rect = surface.get_rect()
     rot_surface = pygame.transform.rotate(surface, angle)

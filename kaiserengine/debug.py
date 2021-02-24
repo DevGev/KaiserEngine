@@ -38,11 +38,11 @@ def objects_in_render(render_objects, Sprite, Projectile, Particles):
             particles_in_render.append(str(render_object.par_a))
 
     print("  ╸ {Sprites}")
-    for sprite in sprites_in_render:
-        print("  ╸\t", sprite)
+    for index, sprite in enumerate(sprites_in_render):
+        print("  ╸\t" + str(index), sprite)
     print("\n  ╸ {Projectiles}")
-    for projectile in projectiles_in_render:
-        print("  ╸\tHorizontal:", projectile)
+    for index, projectile in enumerate(projectiles_in_render):
+        print("  ╸\t" + str(index) + " Horizontal:", projectile)
     print("\n  ╸ {Particles}")
-    for particles in particles_in_render:
-        print("  ╸\tAmount:", particles)
+    for index, particles in enumerate(particles_in_render):
+        print("  ╸\t" + str(index) + " Amount:", particles)
