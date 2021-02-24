@@ -353,17 +353,31 @@ class Bitmap:
         return surf
 
 class Particles:
-    def __init__(self, x, y, r, decrease, amount, color):
+    def __init__(self, x, y, r, decrease, amount, color, velocity):
         self.par_x = x
         self.par_y = y
         self.par_r = r 
         self.par_a = amount
         self.par_d = decrease
         self.par_c = color
+        
+        self.par_vx_max = 20
+        self.par_vy_max = 20
+        self.par_vx_min = 0
+        self.par_vy_min = 0
 
         self.particles = []
+        if velocity:
+            self.velocity(velocity[0], velocity[1])
+
         for x in range(0, amount):
             self.generate()
+
+    def velocity(self, velocity_x, velocity_y):
+        self.par_vx_min = velocity_x[0]
+        self.par_vx_max = velocity_x[1]
+        self.par_vy_min = velocity_y[0]
+        self.par_vy_max = velocity_y[1]
 
     def grab(self):
         circles_draw = []
@@ -376,8 +390,8 @@ class Particles:
         return circles_draw
 
     def generate(self):
-        self.par_vx = random.randint(0, 20) / 10 - 1 
-        self.par_vy = random.randint(0, 20) / 10 - 1 
+        self.par_vx = random.randint(self.par_vx_min, self.par_vx_max) / 10 - 1 
+        self.par_vy = random.randint(self.par_vy_min, self.par_vy_max) / 10 - 1 
         r = self.par_r + random.randint(-2, 2)
         self.particles.append([[self.par_x, self.par_y], [self.par_vx, self.par_vy], r])
 
@@ -642,8 +656,8 @@ class Engine:
         self.render_objects.append(text)
         return self.render_objects[len(self.render_objects)-1]
 
-    def particle_effect(self, x, y, r, decrease, amount, color):
-        particle = Particles(x, y, r, decrease, amount, color)
+    def particle_effect(self, x, y, r, decrease, amount, color, velocity=None):
+        particle = Particles(x, y, r, decrease, amount, color, velocity)
         self.render_objects.append(particle)
         return particle
 

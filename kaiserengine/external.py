@@ -56,7 +56,7 @@ def draw_line(surface, color, start_pos, end_pos, width):
     pygame.draw.line(surface, color, start_pos, end_pos, width) 
 
 def draw_circle(surface, color, center, radius):
-    pygame.draw.circle(surface, color, center, radius) 
+    pygame.draw.circle(surface, color, center, int(radius))
 
 def draw_rect(surface, color, rect):
     pygame.draw.rect(surface, color, rect)
