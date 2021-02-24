@@ -695,7 +695,8 @@ class Engine:
                 if len(circles) == 0:
                     del self.render_objects[index]
                 for circle in circles:
-                    external.draw_circle(self.display, render_object.par_c, (circle[0][0], circle[0][1]), circle[2])
+                    if circle[0][0] <= SCREEN_SIZE_W and circle[0][1] <= SCREEN_SIZE_H and circle[0][0] > 0 and circle[0][1] > 0:
+                        external.draw_circle(self.display, render_object.par_c, (circle[0][0], circle[0][1]), circle[2])
 
             if isinstance(render_object, Circle):
                 external.draw_circle(self.display, render_object.cir_c, (render_object.cir_x, render_object.cir_y), render_object.cir_r)
