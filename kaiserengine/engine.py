@@ -140,11 +140,25 @@ class InputController:
             return 1
         return 0
 
+    def mouse_pressed(self, mkey):
+        if mkey > 2 or mkey < 0:
+            return 0
+        return external.mouse_press()[mkey]
+
+    def mouse_x(self):
+        return external.mouse_pos()[0]
+
+    def mouse_y(self):
+        return external.mouse_pos()[1]
+
 class Cooldown:
     def __init__(self, time, name):
         self.last = external.get_ticks()
         self.cooldown_n = name
         self.cooldown = time
+
+    def reset(self):
+        self.last = external.get_ticks()
 
     def status(self):
         now = external.get_ticks()

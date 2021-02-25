@@ -44,6 +44,13 @@ def event():
 def keys_pressed():
     return pygame.key.get_pressed()
 
+def mouse_press():
+    return pygame.mouse.get_pressed()
+
+def mouse_pos():
+    x, y = pygame.mouse.get_pos()
+    return (x, y)
+
 def event_quit():
     for event in pygame.event.get():              
         if event.type == pygame.QUIT:        
