@@ -21,6 +21,9 @@ def print_error(msg):
     print(Fore.RED + "Error:", msg + Style.RESET_ALL)
     exit()
 
+def print_warning(msg):
+    print(Fore.YELLOW + "Warning:", msg + Style.RESET_ALL)
+
 def objects_in_render(render_objects, Sprite, Projectile, Particles):
     clear_screen()
     sprites_in_render = []

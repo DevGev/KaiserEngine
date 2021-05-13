@@ -1,4 +1,6 @@
 import os
+import requests
+import urllib.request
 from kaiserengine.debug import *
 
 def load_ivan(ivan_file):
@@ -22,3 +24,24 @@ def load_ivan(ivan_file):
         print_error("Failed to load ivan file: " + ivan_file)
 
     return img_load
+
+loaded_images = 0
+def image_parse(bmp):
+    global loaded_images
+    loaded_images += 1
+
+    if bmp[:4] == "http":
+        if not os.path.exists("cache"):
+            os.mkdir("cache")
+
+        ending = "." + bmp.split("/")[-1].split(".")[-1]
+
+        if not os.path.exists("cache/" + str(loaded_images) + ending):
+            print_warning("waiting for images to download from server")
+            try:
+                urllib.request.urlretrieve(bmp, "./cache/" + str(loaded_images) + ending)
+            except:
+                print_error("failed to download images from server")
+        bmp = "./cache/" + str(loaded_images) + ending
+
+    return bmp

@@ -2,6 +2,7 @@ import os
 from sys import exit
 import threading
 import random
+import requests
 from audioplayer import AudioPlayer
 import kaiserengine.external as external
 from kaiserengine.defines import *
@@ -316,6 +317,7 @@ class Image:
 
 class Bitmap:
     def __init__(self, bmp, width, height,  fc, bc):
+        bmp = image_parse(bmp)
         self.bitmap = bmp
         self.bmp_w = width
         self.bmp_h = height
@@ -764,6 +766,7 @@ class Engine:
         return self.cooldowns[len(self.cooldowns)-1]
 
     def load_image(self, p, n):
+        p = image_parse(p)
         force_path(p)
 
         if p.split(".")[1] == "ivan":
@@ -898,6 +901,7 @@ class Engine:
         if isinstance(back, tuple):
             self.background = back
         else:
+            back = image_parse(back)
             force_path(back)
             self.background_image = external.image_load(back)
 
