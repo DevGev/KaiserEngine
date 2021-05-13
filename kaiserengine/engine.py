@@ -3,7 +3,6 @@ from sys import exit
 import threading
 import random
 from audioplayer import AudioPlayer
-
 import kaiserengine.external as external
 from kaiserengine.defines import *
 from kaiserengine.loader import *
@@ -11,7 +10,6 @@ from kaiserengine.debug import *
 
 SCREEN_SIZE_W = 0
 SCREEN_SIZE_H = 0
-
 
 class ColliderController:
     def __init__(self):
@@ -28,19 +26,6 @@ class ColliderController:
 
     def rectangle_collision(self, rect1, rect2):
         return external.rectangle_collision(rect1, rect2)
-
-        # FIXME
-        """
-        for a, b in [(rect1, rect2), (rect2, rect1)]:
-            if (
-                    (self.check_collision_point(a.rec_x, a.rec_y, b)) or
-                    (self.check_collision_point(a.rec_x, a.rec_y + a.rec_h, b)) or
-                    (self.check_collision_point(a.rec_x + a.rec_w, a.rec_y, b)) or
-                    (self.check_collision_point(a.rec_x + a.rec_w, a.rec_y + a.rec_h, b))
-                ):
-                return True
-        return False
-        """
 
     def check_collision(self, sx, sy, sw, sh, source=None, target=None):
         if target == None:
@@ -447,7 +432,7 @@ class Particles:
 
 
 class Sprite:
-    def __init__(self, cm, bmp, x, y, width, height, name):
+    def __init__(self, cm, bmp, x, y, width, height, name, current_layout=False):
         self.sprite_n = name
         self.sprite_h = height
         self.sprite_w = width
@@ -461,6 +446,7 @@ class Sprite:
         self.bitmap = Bitmap(bmp, width, height, 0, 0)
         self.rotation = 0
 
+        self.layout = current_layout
         self.screen_boundary = False
         self.own_surface = None
         self.destroyed = False
@@ -474,10 +460,17 @@ class Sprite:
             x = abs(x)
 
         if self.screen_boundary:
-            if self.sprite_x + x >= SCREEN_SIZE_W - self.sprite_w and direction:
-                return
-            if self.sprite_x - x <= 0 and not direction:
-                return
+            if not self.layout:
+                if self.sprite_x + x >= SCREEN_SIZE_W - self.sprite_w and direction:
+                    return
+                if self.sprite_x - x <= 0 and not direction:
+                    return
+
+            if self.layout:
+                if self.sprite_x + x >= self.layout.layout_max_x - self.sprite_w and direction:
+                    return
+                if self.sprite_x - x <= self.layout.layout_min_x + self.sprite_w and not direction:
+                    return
 
         for i in range(1, x+1):
             i = i/i
@@ -499,10 +492,17 @@ class Sprite:
             y = abs(y)
 
         if self.screen_boundary:
-            if self.sprite_y + y >= SCREEN_SIZE_H - self.sprite_h and not direction:
-                return
-            if self.sprite_y - y <= 0 and direction:
-                return
+            if not self.layout:
+                if self.sprite_y + y >= SCREEN_SIZE_H - self.sprite_h and not direction:
+                    return
+                if self.sprite_y - y <= 0 and direction:
+                    return
+
+            if self.layout:
+                if self.sprite_y + y >= self.layout.layout_min_y - self.sprite_h and not direction:
+                    return
+                if self.sprite_y - y <= self.layout.layout_max_y + self.sprite_h and direction:
+                    return
 
         for i in range(1, y+1):
             i = i/i
@@ -621,12 +621,61 @@ class Task:
     def run(self):
         self.task_t()
 
+class Camera:
+    def __init__(self, min_x, max_x, min_y, max_y, width, height):
+        self.camera_min_x = min_x
+        self.camera_max_x = max_x
+        self.camera_min_y = min_y
+        self.camera_max_y = max_y
+        self.camera_move_x = 0
+        self.camera_move_y = 0
+        self.camera_hx = 0
+        self.camera_hy = 0
+        self.screen_width = width
+        self.screen_height = height
+        self.camera_sprite = None
+        self.camera_follow = False
+
+    def follow(self, sprite):
+        self.camera_sprite = sprite
+        self.camera_follow = True
+
+    def update(self):
+        self.camera_follow = 0
+        if not self.camera_sprite:
+            return 0, 0
+
+        if self.camera_sprite.sprite_x >= self.camera_min_x and self.camera_sprite.sprite_x <= self.camera_max_x:
+            if not self.camera_hx:
+                self.camera_hx = self.camera_sprite.sprite_x
+            self.camera_move_x = self.camera_sprite.sprite_x - self.camera_hx
+            self.camera_follow = 1
+
+        if self.camera_sprite.sprite_y <= self.camera_min_y and self.camera_sprite.sprite_y >= self.camera_max_y:
+            if not self.camera_hy:
+                self.camera_hy = self.camera_sprite.sprite_y
+            self.camera_move_y = self.camera_sprite.sprite_y - self.camera_hy
+            self.camera_follow = 1
+
+        if self.camera_follow == 0:
+            return self.camera_move_x, self.camera_move_y
+
+        return self.camera_move_x, self.camera_move_y
+
+class Layout:
+    def __init__(self, min_x, max_x, min_y, max_y, width, height):
+        self.layout_min_x = min_x
+        self.layout_max_x = max_x
+        self.layout_min_y = min_y
+        self.layout_max_y = max_y
+        self.camera = Camera(min_x + width/2, max_x - width/2, min_y - height/2, max_y + height/2, width, height)
 
 class Engine:
     def __init__(self, width, height, title, icon):
         self.screen_icon = None
         self.background_image = None
         self.background = colors.BLACK
+
         if icon:
             self.screen_icon = external.image_load(icon, False)
 
@@ -645,18 +694,20 @@ class Engine:
         self.render_objects = []
         self.tasks = []
 
-        self.current_font = None
-        self.is_running = True
+        self.game_layout = None
         self.debug = False
+        self.is_running = True
+        self.current_font = None
         self.enable_fullscreen = False
         self.fullscreen_key = keys.KEY_F
-        self.fullscreen_counter = self.cooldown(1000, "Fullscreen Timer")
+        self.fullscreen_counter = self.cooldown(1000, "Full Screen Timer")
 
         self.display_flags = 0
         self.delta_time = 0
         self.fps = 160
         self.display = external.display(
-            self.screen_title, self.screen_width, self.screen_height, self.screen_icon)
+            self.screen_title, self.screen_width, self.screen_height, self.screen_icon
+        )
 
     def set_display_mode(self, flags):
         self.display_flags = flags
@@ -761,9 +812,11 @@ class Engine:
 
     def sprite(self, bmp, x, y, w, h, n):
         self.render_objects.append(
-            Sprite(self.collider_manager, bmp, x, y, w, h, n))
+            Sprite(self.collider_manager, bmp, x, y, w, h, n, self.game_layout)
+        )
         self.collider_manager.collider(
-            self.render_objects[len(self.render_objects)-1])
+            self.render_objects[len(self.render_objects)-1]
+        )
         return self.render_objects[len(self.render_objects)-1]
 
     def projectile(self, sx, sy, ex, ey, w, h, time, color):
@@ -771,7 +824,7 @@ class Engine:
             self.collider_manager, sx, sy, ex, ey, w, h, time, color))
         return self.render_objects[len(self.render_objects)-1]
 
-    def render_layer(self, layer):
+    def render_layer(self, layer, cam_x, cam_y):
         for index, render_object in enumerate(layer):
             if isinstance(render_object, Particles):
                 circles = render_object.grab()
@@ -806,23 +859,30 @@ class Engine:
                     del layer[index]
 
             if isinstance(render_object, Sprite):
-                if render_object.destroyed == True:
+                if render_object.destroyed:
                     layer.remove(render_object)
 
-                if render_object.hidden != True:
+                if not render_object.hidden:
                     self.display.blit(render_object.grab_surface(
-                    ), (render_object.sprite_x, render_object.sprite_y))
+                    ), (render_object.sprite_x - cam_x, render_object.sprite_y - cam_y))
 
     def render(self):
+        cam_x, cam_y = 0, 0
+        bak_x, bak_y = 0, 0
+        if self.game_layout:
+            cam_x, cam_y = self.game_layout.camera.update()
+            bak_x = self.game_layout.layout_min_x
+            bak_y = self.game_layout.layout_max_y
+
         if self.background_image:
-            self.display.blit(self.background_image, (0, 0))
+            self.display.blit(self.background_image, (bak_x - cam_x, bak_y - cam_y))
         else:
             self.display.fill(self.background)
 
-        self.render_layer(self.render_objects)
+        self.render_layer(self.render_objects, cam_x, cam_y)
         for layer in self.layers:
             if not layer.layer_h:
-                self.render_layer(layer.render_objects)
+                self.render_layer(layer.render_objects, cam_x, cam_y)
         external.display_flip()
 
     def task(self, t, n):
@@ -841,6 +901,10 @@ class Engine:
             force_path(back)
             self.background_image = external.image_load(back)
 
+    def layout(self, min_x, max_x, min_y, max_y):
+        self.game_layout = Layout(min_x, max_x, min_y, max_y, SCREEN_SIZE_W, SCREEN_SIZE_H)
+        return self.game_layout
+
     def events(self):
         external.event_quit()
 
@@ -854,8 +918,7 @@ class Engine:
     def run(self):
         while self.is_running:
             if self.debug == True:
-                objects_in_render(self.render_objects,
-                                  Sprite, Projectile, Particles)
+                objects_in_render(self.render_objects, Sprite, Projectile, Particles)
             self.delta_time = self.clock.tick(self.fps)
 
             for task in self.tasks:
