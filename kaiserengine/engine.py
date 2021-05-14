@@ -471,7 +471,7 @@ class Sprite:
             if self.layout:
                 if self.sprite_x + x >= self.layout.layout_max_x - self.sprite_w and direction:
                     return
-                if self.sprite_x - x <= self.layout.layout_min_x + self.sprite_w and not direction:
+                if self.sprite_x - x <= self.layout.layout_min_x and not direction:
                     return
 
         for i in range(1, x+1):
@@ -503,7 +503,7 @@ class Sprite:
             if self.layout:
                 if self.sprite_y + y >= self.layout.layout_min_y - self.sprite_h and not direction:
                     return
-                if self.sprite_y - y <= self.layout.layout_max_y + self.sprite_h and direction:
+                if self.sprite_y - y <= self.layout.layout_max_y and direction:
                     return
 
         for i in range(1, y+1):
@@ -559,7 +559,6 @@ class Sprite:
     def circle(self, circle):
         if not isinstance(circle, Circle):
             print_error("invalid circle")
-            return 0
         self.own_surface = external.surface((self.sprite_w, self.sprite_h))
         self.own_surface.fill((255, 0, 255))
         external.draw_circle
@@ -572,7 +571,6 @@ class Sprite:
     def rectangle(self, rectangle):
         if not isinstance(rectangle, Rectangle):
             print_error("invalid rectangle")
-            return 0
         self.own_surface = external.surface((self.sprite_w, self.sprite_h))
         self.own_surface.fill((255, 0, 255))
         external.draw_rect(
@@ -641,6 +639,12 @@ class Camera:
     def follow(self, sprite):
         self.camera_sprite = sprite
         self.camera_follow = True
+
+    def center(self, sprite):
+        sprite.sprite_x = self.screen_width/2 - sprite.sprite_w/2
+        sprite.sprite_y = self.screen_height/2
+        sprite.sprite_ox = sprite.sprite_x
+        sprite.sprite_oy = sprite.sprite_y
 
     def update(self):
         self.camera_follow = 0
