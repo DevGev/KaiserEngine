@@ -130,9 +130,16 @@ class InputController:
     def __init__(self, e):
         self.events = e
 
-    def pressed(self, key):
+    def pressed(self, check, mod=0):
+        if isinstance(check, Sprite):
+            if self.mouse_pressed(mod):
+                r1 = Rectangle(check.sprite_x, check.sprite_y, check.sprite_w, check.sprite_h, 0)
+                r2 = Rectangle(self.mouse_x(), self.mouse_y(), 1, 1, 0)
+                return external.rectangle_collision(r1, r2)
+            return 0
+
         keys = external.keys_pressed()
-        if keys[key] or keys[key]:
+        if keys[check] or keys[check]:
             return 1
         return 0
 
@@ -242,8 +249,8 @@ class Projectile:
             bmp.bmp_h = self.projectile_h
             bmp.bmp_w = self.projectile_w
             self.bitmap = bmp
-
             return 0
+
         self.bitmap = Bitmap(bmp, self.projectile_w, self.projectile_h, 0, 0)
 
     def bitmap_timing(self, time):
@@ -588,6 +595,11 @@ class Sprite:
         self.destroyed = True
         self.collider_manager.remove(self.sprite_n)
 
+    def name(self):
+        return self.sprite_n
+
+    def pos(self):
+        return (self.sprite_x, self.sprite_y)
 
 class Text:
     def __init__(self, t, x, y, f, c):
@@ -663,8 +675,8 @@ class Camera:
             self.camera_move_y = self.camera_sprite.sprite_y - self.camera_hy
             self.camera_follow = 1
 
-        if self.camera_follow == 0:
-            return self.camera_move_x, self.camera_move_y
+        # if self.camera_follow == 0:
+            # return self.camera_move_x, self.camera_move_y
 
         return self.camera_move_x, self.camera_move_y
 
@@ -739,6 +751,12 @@ class Engine:
                 if sprite.sprite_n == name:
                     return sprite
 
+        for layer in self.layers:
+            for sprite in layer.render_objects:
+                if isinstance(sprite, Sprite):
+                    if sprite.sprite_n == name:
+                        return sprite
+
     def find_image(self, name):
         for image in self.loaded_images:
             if isinstance(image, list):
@@ -748,6 +766,13 @@ class Engine:
                 if image.img_n == name:
                     return image
         print_error("could not preload image: " + name)
+
+    def layer_remove(self, item, name):
+        for l in self.layers:
+            if l.layer_n == name:
+                for s in l.render_objects:
+                    if s.sprite_n == item:
+                        l.render_objects.remove(s)
 
     def layer_add(self, item, name):
         for l in self.layers:
