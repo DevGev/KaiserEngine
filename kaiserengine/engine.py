@@ -12,6 +12,7 @@ from kaiserengine.debug import *
 SCREEN_SIZE_W = 0
 SCREEN_SIZE_H = 0
 
+
 class ColliderController:
     def __init__(self):
         self.sprites = []
@@ -324,7 +325,8 @@ class Image:
 
 class Bitmap:
     def __init__(self, bmp, width, height,  fc, bc):
-        bmp = image_parse(bmp)
+        if isinstance(bmp, str):
+            bmp = image_parse(bmp)
         self.bitmap = bmp
         self.bmp_w = width
         self.bmp_h = height
@@ -487,12 +489,13 @@ class Sprite:
                 self.sprite_x += i
             else:
                 self.sprite_x -= i
-            if self.collider_manager.check(self.sprite_n) and not self.ghost:
-                if direction == True:
-                    self.sprite_x -= i
-                else:
-                    self.sprite_x += i
-                return
+            if not self.ghost:
+                if self.collider_manager.check(self.sprite_n):
+                    if direction == True:
+                        self.sprite_x -= i
+                    else:
+                        self.sprite_x += i
+                    return
 
     def move_y(self, y):
         direction = True
@@ -525,6 +528,10 @@ class Sprite:
                 else:
                     self.sprite_y += i
                 return
+
+    def set_position(self, x, y):
+        self.sprite_x = x
+        self.sprite_y = y
 
     def restore_position(self):
         self.sprite_x = self.sprite_ox
@@ -598,7 +605,7 @@ class Sprite:
     def name(self):
         return self.sprite_n
 
-    def pos(self):
+    def position(self):
         return (self.sprite_x, self.sprite_y)
 
 class Text:
