@@ -50,7 +50,10 @@ def keys_pressed():
 
 
 def mouse_press():
-    return pygame.mouse.get_pressed()
+    for event in pygame.event.get(pygame.MOUSEBUTTONDOWN):
+        if event.type == pygame.MOUSEBUTTONDOWN:
+            return pygame.mouse.get_pressed()
+    return [0, 0, 0, 0]
 
 
 def mouse_pos():
@@ -59,7 +62,7 @@ def mouse_pos():
 
 
 def event_quit():
-    for event in pygame.event.get():
+    for event in pygame.event.get(pygame.QUIT):
         if event.type == pygame.QUIT:
             pygame.quit()
             exit()
@@ -80,12 +83,11 @@ def draw_rect(surface, color, rect):
     pygame.draw.rect(surface, color, rect)
 
 
-def surface(size, colorkey=True):
-    surf = pygame.Surface(size)
-    if colorkey:
-        surf.set_colorkey(colors.TRANSPARENT)
+def surface(size, colorkey=True, flags=0):
+    surf = pygame.Surface(size, flags).convert_alpha()
+    # if colorkey:
+        # surf.set_colorkey(colors.TRANSPARENT)
     return surf
-
 
 def init_font(font, size, system_font=True):
     pygame.font.init()
