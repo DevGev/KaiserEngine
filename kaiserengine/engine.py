@@ -599,6 +599,9 @@ class Sprite:
             return self.own_surface
         return self.bitmap.grab_surface()
 
+    def grab_bitmap(self):
+        return self.bitmap
+
     def destroy(self):
         self.destroyed = True
         self.collider_manager.remove(self.sprite_n)
