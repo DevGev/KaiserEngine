@@ -522,12 +522,13 @@ class Sprite:
                 self.sprite_y += i
             else:
                 self.sprite_y -= i
-            if self.collider_manager.check(self.sprite_n) and not self.ghost:
-                if direction == False:
-                    self.sprite_y -= i
-                else:
-                    self.sprite_y += i
-                return
+            if not self.ghost:
+                if self.collider_manager.check(self.sprite_n):
+                    if direction == False:
+                        self.sprite_y -= i
+                    else:
+                        self.sprite_y += i
+                    return
 
     def set_position(self, x, y):
         self.sprite_x = x
