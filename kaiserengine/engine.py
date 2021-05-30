@@ -819,7 +819,7 @@ class Engine:
         return self.loaded_images[len(self.loaded_images)-1]
 
     def font(self, f, s):
-        if ".tff" in f:
+        if ".ttf" in f:
             force_path(f)
             self.current_font = external.init_font(f, s, False)
         else:
