@@ -623,9 +623,18 @@ class Text:
         self.current_font = f
         self.generate()
 
-    def text(self, t):
-        self.text_t = t
+    def set_position(self, x, y):
+        self.text_x = x
+        self.text_y = y
+
+    def size(self, t):
+        return self.current_font.size(t)
+
+    def text(self, t=0):
+        if t:
+            self.text_t = t
         self.generate()
+        return self.text_t
 
     def generate(self):
         self.text_surface = self.current_font.render(
